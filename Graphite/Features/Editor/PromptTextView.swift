@@ -1,5 +1,4 @@
 import SwiftUI
-#if canImport(AppKit)
 import AppKit
 
 struct PromptTextView: NSViewRepresentable {
@@ -64,16 +63,6 @@ struct PromptTextView: NSViewRepresentable {
         }
     }
 }
-#else
-struct PromptTextView: View {
-    @Binding var text: String
-
-    var body: some View {
-        TextEditor(text: $text)
-            .font(.system(size: 13, design: .monospaced))
-    }
-}
-#endif
 
 private final class LineNumberRulerView: NSRulerView {
     private let lineNumberAttributes: [NSAttributedString.Key: Any] = [

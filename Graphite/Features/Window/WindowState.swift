@@ -1,10 +1,6 @@
-import Foundation
-#if canImport(AppKit)
 import AppKit
-#endif
 
 final class WindowState: ObservableObject {
-    #if canImport(AppKit)
     private weak var window: NSWindow?
 
     func attach(window: NSWindow) {
@@ -18,11 +14,4 @@ final class WindowState: ObservableObject {
     func hideWindow() {
         window?.orderOut(nil)
     }
-    #else
-    func applyAlwaysOnTop(_ enabled: Bool) {
-        _ = enabled
-    }
-
-    func hideWindow() {}
-    #endif
 }
