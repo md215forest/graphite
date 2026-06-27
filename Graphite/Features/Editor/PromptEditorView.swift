@@ -6,185 +6,386 @@ struct PromptEditorView: View {
     @EnvironmentObject private var settingsStore: SettingsStore
 
     private let clipboardService = ClipboardService()
-    @State private var showClearConfirmation = false
+    @State private var focusTrigger = 0
+
+    // Hover state for ghost / toolbar controls.
+    @State private var hoverOverflow = false
+    @State private var hoverAlwaysOnTop = false
+    @State private var hoverClear = false
+    @State private var hoverCopy = false
+    @State private var hoverCopyHide = false
+
+    private var accent: Color { Theme.accent(settingsStore.settings.accent) }
+    private var accentSoft: Color { Theme.accentSoft(settingsStore.settings.accent) }
 
     var body: some View {
-        VStack(spacing: 12) {
-            header
-            editorContainer
+        VStack(spacing: 0) {
+            titleBar
+            sheenDivider(0.09)
+            editor
+            sheenDivider(0.07)
             footer
         }
-        .padding(14)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background(Theme.windowGradient)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color.white.opacity(0.07), lineWidth: 1)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .shadow(color: .black.opacity(0.06), radius: 14, y: 6)
-        .alert("Clear Prompt?", isPresented: $showClearConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Clear", role: .destructive) {
-                editorState.text = ""
-            }
-        } message: {
-            Text("Current prompt text will be removed.")
-        }
-    }
-
-    private var header: some View {
-        HStack(spacing: 10) {
-            Circle().fill(Color(red: 1.0, green: 0.37, blue: 0.34)).frame(width: 12, height: 12)
-            Circle().fill(Color(red: 1.0, green: 0.74, blue: 0.2)).frame(width: 12, height: 12)
-            Circle().fill(Color(red: 0.17, green: 0.8, blue: 0.36)).frame(width: 12, height: 12)
+        .overlay(alignment: .top) {
+            // inset top highlight: inset 0 1px 0 rgba(255,255,255,0.05)
             Rectangle()
-                .fill(Color.gray.opacity(0.28))
-                .frame(width: 1, height: 18)
-                .padding(.horizontal, 4)
-            Text("graphite")
-                .font(.system(size: 20 / 2, weight: .medium))
-                .foregroundStyle(Color.gray.opacity(0.78))
-            Spacer()
-        }
-        .padding(.horizontal, 2)
-        .padding(.bottom, 8)
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(Color.gray.opacity(0.16))
+                .fill(Color.white.opacity(0.05))
                 .frame(height: 1)
+                .padding(.horizontal, 1)
+        }
+        .overlay(alignment: .bottom) { toast }
+        .ignoresSafeArea()
+    }
+
+    // MARK: - Title bar (46px)
+
+    private var titleBar: some View {
+        ZStack {
+            HStack {
+                trafficLights
+                Spacer()
+            }
+            brand
+            HStack {
+                Spacer()
+                overflowMenu
+            }
+        }
+        .padding(.horizontal, 16)
+        .frame(height: 40)
+    }
+
+    private var trafficLights: some View {
+        HStack(spacing: 8) {
+            trafficLight(Theme.trafficRed) { windowState.closeWindow() }
+            trafficLight(Theme.trafficYellow) { windowState.miniaturize() }
+            trafficLight(Theme.trafficGreen) { windowState.zoom() }
         }
     }
 
-    private var editorContainer: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Draft your prompt safely before sending")
-                .font(.system(size: 30 / 2))
-                .foregroundStyle(Color.gray.opacity(0.72))
+    private func trafficLight(_ color: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Circle()
+                .fill(color)
+                .frame(width: 12, height: 12)
+                .overlay(
+                    Circle().stroke(Color.black.opacity(0.25), lineWidth: 0.5)
+                )
+        }
+        .buttonStyle(.plain)
+    }
 
-            PromptTextView(text: $editorState.text)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .contextMenu {
-                    copyModeMenuItems
+    private var brand: some View {
+        HStack(spacing: 9) {
+            Hexagon()
+                .fill(
+                    LinearGradient(
+                        colors: [accent, Color(rgb: 0x36383E)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    Hexagon().stroke(Color.white.opacity(0.3), lineWidth: 0.5)
+                        .blendMode(.overlay)
+                )
+                .frame(width: 17, height: 19)
+            Text("Graphite")
+                .font(Theme.ui(15, .semibold))
+                .tracking(0.6)  // 0.04em at 15px
+                .foregroundStyle(Theme.wordmark)
+        }
+    }
+
+    private var overflowMenu: some View {
+        Menu {
+            settingsMenuContent
+        } label: {
+            Text("⋯")
+                .font(.system(size: 17))
+                .foregroundStyle(hoverOverflow ? Color(rgb: 0xB3B6BD) : Color(rgb: 0x797C85))
+                .frame(width: 28, height: 28)
+                .background(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(Color.white.opacity(hoverOverflow ? 0.06 : 0))
+                )
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .onHover { hoverOverflow = $0 }
+    }
+
+    @ViewBuilder
+    private var settingsMenuContent: some View {
+        Menu("Copy Format") {
+            ForEach(CopyMode.allCases) { mode in
+                Button {
+                    settingsStore.settings.copyMode = mode
+                } label: {
+                    if settingsStore.settings.copyMode == mode {
+                        Label(mode.title, systemImage: "checkmark")
+                    } else {
+                        Text(mode.title)
+                    }
                 }
-                .accessibilityLabel("Prompt editor")
+            }
         }
-        .padding(14)
-        .background(Color.white)
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        Menu("Accent") {
+            ForEach(AccentColor.allCases) { color in
+                Button {
+                    settingsStore.settings.accent = color
+                } label: {
+                    if settingsStore.settings.accent == color {
+                        Label(color.title, systemImage: "checkmark")
+                    } else {
+                        Text(color.title)
+                    }
+                }
+            }
+        }
+        Menu("Enter Key") {
+            ForEach(EnterKeyMode.allCases) { mode in
+                Button {
+                    settingsStore.settings.enterKey = mode
+                } label: {
+                    if settingsStore.settings.enterKey == mode {
+                        Label(mode.title, systemImage: "checkmark")
+                    } else {
+                        Text(mode.title)
+                    }
+                }
+            }
+        }
+        Toggle(
+            "Show Texture",
+            isOn: Binding(
+                get: { settingsStore.settings.showTexture },
+                set: { settingsStore.settings.showTexture = $0 }
+            ))
     }
+
+    // MARK: - Editor
+
+    private var editor: some View {
+        ZStack(alignment: .topLeading) {
+            PromptTextView(
+                text: $editorState.text,
+                accent: accent,
+                enterKey: settingsStore.settings.enterKey,
+                focusTrigger: focusTrigger,
+                onSubmit: { copy(andHide: false) }
+            )
+            if settingsStore.settings.showTexture {
+                PencilGrain()
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityLabel("Prompt editor")
+    }
+
+    // MARK: - Footer (58px)
 
     private var footer: some View {
-        HStack(spacing: 14) {
-            Label("\(editorState.characterCount) chars  ・  \(editorState.lineCount) lines", systemImage: "doc.text")
-                .foregroundStyle(Color.gray.opacity(0.8))
-
-            Text(editorState.copiedMessage ?? "Copied")
-                .foregroundStyle(Color.gray.opacity(0.78))
-                .opacity(editorState.copiedMessage == nil ? 0 : 1)
-                .frame(width: 48, alignment: .leading)
-
-            Toggle("Always on Top", isOn: Binding(
-                get: { settingsStore.settings.alwaysOnTop },
-                set: {
-                    settingsStore.settings.alwaysOnTop = $0
-                    windowState.applyAlwaysOnTop($0)
-                }
-            ))
-            .toggleStyle(.checkbox)
-            .font(.system(size: 13))
-            .foregroundStyle(Color.gray.opacity(0.82))
-
-            Button("Clear") {
-                if !editorState.text.isEmpty {
-                    showClearConfirmation = true
-                }
-            }
-            .disabled(editorState.text.isEmpty)
-            .buttonStyle(.bordered)
-            .tint(.gray.opacity(0.35))
-
-            Menu {
-                copyModeMenuItems
-            } label: {
-                Image(systemName: "ellipsis.circle")
-                    .font(.system(size: 14))
-                    .foregroundStyle(Color.gray.opacity(0.65))
-            }
-            .menuStyle(.borderlessButton)
-
+        HStack(spacing: 12) {
+            counter
             Spacer()
-
-            Text("Enter: New line")
-            divider
-            Button("⌘↩ Copy", action: { copy(andHide: false) })
-                .keyboardShortcut(.return, modifiers: [.command])
-                .buttonStyle(.plain)
-                .foregroundStyle(Color.gray.opacity(0.9))
-            divider
-            Button("⇧⌘↩ Copy & Hide", action: { copy(andHide: true) })
-                .keyboardShortcut(.return, modifiers: [.command, .shift])
-                .buttonStyle(.plain)
-                .foregroundStyle(Color.gray.opacity(0.9))
+            alwaysOnTopButton
+            clearButton
+            separator
+            Text(settingsStore.settings.enterKey.hint)
+                .font(Theme.ui(11.5))
+                .foregroundStyle(Theme.label)
+            copyButton
+            copyHideButton
         }
-        .font(.system(size: 13))
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .background(Color.white.opacity(0.92))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.gray.opacity(0.15), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .padding(.leading, 18)
+        .padding(.trailing, 16)
+        .frame(height: 58)
+        .background(Theme.footerGradient)
     }
 
-    private var copyModeMenuItems: some View {
-        ForEach(CopyMode.allCases) { mode in
-            Button {
-                settingsStore.settings.copyMode = mode
-            } label: {
-                if settingsStore.settings.copyMode == mode {
-                    Label(mode.title, systemImage: "checkmark")
-                } else {
-                    Text(mode.title)
-                }
+    private var counter: some View {
+        HStack(spacing: 8) {
+            Hexagon()
+                .fill(Theme.footerHex)
+                .frame(width: 14, height: 16)
+            Text(editorState.counterText)
+                .font(Theme.mono(11.5))
+                .foregroundStyle(Theme.labelMuted)
+        }
+    }
+
+    private var alwaysOnTopButton: some View {
+        Button {
+            let next = !settingsStore.settings.alwaysOnTop
+            settingsStore.settings.alwaysOnTop = next
+            windowState.applyAlwaysOnTop(next)
+        } label: {
+            HStack(spacing: 7) {
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    .fill(settingsStore.settings.alwaysOnTop ? accent : Color.clear)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                            .stroke(Color.white.opacity(0.22), lineWidth: 1.5)
+                    )
+                    .overlay {
+                        if settingsStore.settings.alwaysOnTop {
+                            Text("✓")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(Color(rgb: 0x1A1B1F))
+                        }
+                    }
+                    .frame(width: 15, height: 15)
+                Text("Always on Top")
+                    .font(Theme.ui(12.5))
+                    .foregroundStyle(
+                        hoverAlwaysOnTop ? Theme.textSecondaryHover : Theme.textSecondary)
             }
         }
+        .buttonStyle(.plain)
+        .onHover { hoverAlwaysOnTop = $0 }
     }
 
-    private var divider: some View {
-        Rectangle()
-            .fill(Color.gray.opacity(0.22))
-            .frame(width: 1, height: 14)
+    private var clearButton: some View {
+        Button(action: clear) {
+            Text("Clear")
+                .font(Theme.ui(12.5))
+                .foregroundStyle(hoverClear ? Theme.textSecondaryHover : Theme.textSecondary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(Color.white.opacity(hoverClear ? 0.05 : 0))
+                )
+        }
+        .buttonStyle(.plain)
+        .onHover { hoverClear = $0 }
     }
+
+    private var separator: some View {
+        Rectangle()
+            .fill(Color.white.opacity(0.08))
+            .frame(width: 1, height: 20)
+    }
+
+    private var copyButton: some View {
+        Button(action: { copy(andHide: false) }) {
+            HStack(spacing: 7) {
+                Text("⌘↵")
+                    .font(Theme.mono(11))
+                    .foregroundStyle(Color(rgb: 0x9296A0))
+                Text(editorState.copiedMessage == nil ? "Copy" : "Copied")
+                    .font(Theme.ui(12.5, .medium))
+                    .foregroundStyle(Color(rgb: 0xD2D4D9))
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.white.opacity(hoverCopy ? 0.07 : 0.03))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(Color.white.opacity(hoverCopy ? 0.16 : 0.10), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .keyboardShortcut(.return, modifiers: [.command])
+        .onHover { hoverCopy = $0 }
+    }
+
+    private var copyHideButton: some View {
+        Button(action: { copy(andHide: true) }) {
+            HStack(spacing: 7) {
+                Text("⇧⌘↵")
+                    .font(Theme.mono(11))
+                    .foregroundStyle(Color(rgb: 0xB7BAC1))
+                Text(editorState.copiedMessage == nil ? "Copy & Hide" : "Copied")
+                    .font(Theme.ui(12.5, .semibold))
+                    .foregroundStyle(Color(rgb: 0xF0F1F3))
+            }
+            .padding(.horizontal, 13)
+            .padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(hoverCopyHide ? Theme.copyHideGradientHover : Theme.copyHideGradient)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(Color.white.opacity(0.13), lineWidth: 1)
+            )
+            .overlay(alignment: .top) {
+                Rectangle().fill(accentSoft).frame(height: 1).padding(.horizontal, 1)
+            }
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(Color.white.opacity(0.14), lineWidth: 1)
+                    .blur(radius: 0.5)
+                    .padding(0.5)
+                    .mask(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .allowsHitTesting(false)
+            )
+            .shadow(color: .black.opacity(0.4), radius: 1, y: 1)
+        }
+        .buttonStyle(.plain)
+        .keyboardShortcut(.return, modifiers: [.command, .shift])
+        .onHover { hoverCopyHide = $0 }
+    }
+
+    // MARK: - Toast
+
+    @ViewBuilder
+    private var toast: some View {
+        if let message = editorState.toast {
+            HStack(spacing: 7) {
+                Circle().fill(accent).frame(width: 7, height: 7)
+                Text(message)
+                    .font(Theme.ui(12.5))
+                    .foregroundStyle(Theme.textPrimary)
+            }
+            .padding(.horizontal, 15)
+            .padding(.vertical, 9)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Theme.toastBackground)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.55), radius: 18, y: 14)
+            .padding(.bottom, 74)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+            .animation(.easeOut(duration: 0.18), value: editorState.toast)
+        }
+    }
+
+    // MARK: - Dividers
+
+    private func sheenDivider(_ alpha: Double) -> some View {
+        Theme.sheen(alpha)
+            .frame(height: 1)
+    }
+
+    // MARK: - Actions
 
     private func copy(andHide: Bool) {
         editorState.copy(mode: settingsStore.settings.copyMode, clipboardService: clipboardService)
-
+        editorState.showToast(andHide ? "Copied — window hidden" : "Copied to clipboard")
         if andHide {
             windowState.hideWindow()
         }
     }
-}
 
-#Preview {
-    PromptEditorView()
-        .environmentObject({
-            let state = EditorState()
-            state.text = """
-            Tasklineのプロジェクト登録画面を改善してください。
-
-            要件:
-            - ライトトーンではなく落ち着いたトーンにする
-            - 余白とタイポグラフィを整理する
-            - ボタンの優先度を明確にする
-            """
-            return state
-        }())
-        .environmentObject(WindowState())
-        .environmentObject(SettingsStore())
-        .frame(width: 980, height: 680)
+    private func clear() {
+        editorState.text = ""
+        focusTrigger += 1
+    }
 }

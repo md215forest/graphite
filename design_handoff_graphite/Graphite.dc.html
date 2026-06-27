@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: #0c0d0f; }
+  textarea::placeholder { color: #5a5d65; }
+  textarea::selection { background: rgba(185,190,200,0.22); }
+  textarea::-webkit-scrollbar { width: 9px; }
+  textarea::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 9px; border: 2px solid transparent; background-clip: padding-box; }
+  textarea::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); background-clip: padding-box; }
+  @keyframes gphFade { from { opacity: 0; transform: translate(-50%, 6px); } to { opacity: 1; transform: translate(-50%, 0); } }
+</style>
+</helmet>
+<div style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:46px; background:radial-gradient(150% 130% at 50% -5%, #17181b 0%, #0b0c0e 68%);">
+  <div ref="{{ rootRef }}" style="position:relative; width:880px; height:600px; display:flex; flex-direction:column; border-radius:14px; overflow:hidden; background:radial-gradient(125% 85% at 50% -12%, #232427 0%, #191a1d 58%); border:1px solid rgba(255,255,255,0.07); box-shadow:0 36px 90px -24px rgba(0,0,0,0.72), inset 0 1px 0 rgba(255,255,255,0.05); font-family:'Hanken Grotesk',sans-serif;">
+
+    <!-- Title bar (single set of controls) -->
+    <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; height:46px; padding:0 16px; flex:none;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="width:12px; height:12px; border-radius:50%; background:#ec6a5e; box-shadow:inset 0 0 0 0.5px rgba(0,0,0,0.25);"></span>
+        <span style="width:12px; height:12px; border-radius:50%; background:#f3bd4f; box-shadow:inset 0 0 0 0.5px rgba(0,0,0,0.25);"></span>
+        <span style="width:12px; height:12px; border-radius:50%; background:#61c454; box-shadow:inset 0 0 0 0.5px rgba(0,0,0,0.25);"></span>
+      </div>
+      <div style="display:flex; align-items:center; gap:9px;">
+        <span style="width:17px; height:19px; clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); background:linear-gradient(150deg, var(--accent,#b9bec8) 0%, #36383e 88%); box-shadow:inset 0 1px 0 rgba(255,255,255,0.3);"></span>
+        <span style="font-weight:600; font-size:15px; letter-spacing:0.04em; color:#e9eaed;">Graphite</span>
+      </div>
+      <div style="justify-self:end; display:flex; align-items:center;">
+        <button style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; border:none; border-radius:7px; background:transparent; color:#797c85; font-size:17px; line-height:1; cursor:pointer;" style-hover="background:rgba(255,255,255,0.06); color:#b3b6bd;">⋯</button>
+      </div>
+    </div>
+
+    <!-- graphite sheen divider -->
+    <div style="height:1px; flex:none; background:linear-gradient(90deg, transparent 4%, rgba(255,255,255,0.09) 50%, transparent 96%);"></div>
+
+    <!-- Editor -->
+    <div style="position:relative; flex:1; display:flex; min-height:0;">
+      <sc-if value="{{ showTexture }}" hint-placeholder-val="{{ true }}">
+        <div style="position:absolute; inset:0; pointer-events:none; opacity:0.6; background-image:repeating-linear-gradient(132deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 8px);"></div>
+      </sc-if>
+      <textarea ref="{{ taRef }}" value="{{ text }}" onChange="{{ onChange }}" onKeyDown="{{ onKeyDown }}" placeholder="Draft your prompt safely before sending" spellcheck="false" style="position:relative; flex:1; width:100%; resize:none; border:none; outline:none; background:transparent; padding:30px 34px; font-family:'JetBrains Mono',monospace; font-size:15px; line-height:1.78; letter-spacing:0.01em; color:#e6e7ea; caret-color:var(--accent,#b9bec8);"></textarea>
+    </div>
+
+    <!-- footer sheen divider -->
+    <div style="height:1px; flex:none; background:linear-gradient(90deg, transparent 4%, rgba(255,255,255,0.07) 50%, transparent 96%);"></div>
+
+    <!-- Footer toolbar -->
+    <div style="display:flex; align-items:center; gap:12px; height:58px; flex:none; padding:0 16px 0 18px; background:linear-gradient(180deg, #171819 0%, #141517 100%);">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="width:14px; height:16px; clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); background:#4a4d54; flex:none;"></span>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:0.02em; color:#6f727a;">{{ countLabel }}</span>
+      </div>
+
+      <div style="flex:1;"></div>
+
+      <button onClick="{{ toggleTop }}" style="display:flex; align-items:center; gap:8px; border:none; background:transparent; padding:5px 6px; border-radius:7px; cursor:pointer; color:#9a9da4; font-family:'Hanken Grotesk',sans-serif; font-size:12.5px;" style-hover="color:#c6c8cd;">
+        <span style="position:relative; width:15px; height:15px; border-radius:4px; border:1.5px solid rgba(255,255,255,0.22); flex:none;">
+          <sc-if value="{{ alwaysOnTop }}" hint-placeholder-val="{{ false }}">
+            <span style="position:absolute; inset:-1.5px; border-radius:4px; background:var(--accent,#b9bec8); display:flex; align-items:center; justify-content:center; color:#1a1b1f; font-size:11px; font-weight:700;">✓</span>
+          </sc-if>
+        </span>
+        Always on Top
+      </button>
+
+      <button onClick="{{ onClear }}" style="border:none; background:transparent; padding:6px 10px; border-radius:7px; cursor:pointer; color:#9a9da4; font-family:'Hanken Grotesk',sans-serif; font-size:12.5px;" style-hover="background:rgba(255,255,255,0.05); color:#c6c8cd;">Clear</button>
+
+      <span style="width:1px; height:20px; background:rgba(255,255,255,0.08);"></span>
+
+      <span style="font-size:11.5px; color:#65686f; letter-spacing:0.01em;">{{ enterHintLabel }}</span>
+
+      <button onClick="{{ onCopy }}" style="display:flex; align-items:center; gap:7px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.03); padding:7px 12px; border-radius:8px; cursor:pointer; color:#d2d4d9; font-family:'Hanken Grotesk',sans-serif; font-size:12.5px; font-weight:500;" style-hover="background:rgba(255,255,255,0.07); border-color:rgba(255,255,255,0.16);">
+        <span style="display:inline-flex; gap:2px; font-family:'JetBrains Mono',monospace; font-size:11px; color:#9296a0;">⌘<span style="font-size:12px;">↵</span></span>
+        {{ copyLabel }}
+      </button>
+
+      <button onClick="{{ onCopyHide }}" style="display:flex; align-items:center; gap:7px; border:1px solid rgba(255,255,255,0.13); border-top-color:var(--accent-soft,rgba(185,190,200,0.3)); background:linear-gradient(180deg, #3b3e45 0%, #2a2c31 100%); padding:7px 13px; border-radius:8px; cursor:pointer; color:#f0f1f3; font-family:'Hanken Grotesk',sans-serif; font-size:12.5px; font-weight:600; box-shadow:inset 0 1px 0 rgba(255,255,255,0.14), 0 1px 2px rgba(0,0,0,0.4);" style-hover="background:linear-gradient(180deg, #44474f 0%, #303338 100%);">
+        <span style="display:inline-flex; gap:2px; font-family:'JetBrains Mono',monospace; font-size:11px; color:#b7bac1;">⇧⌘<span style="font-size:12px;">↵</span></span>
+        {{ copyHideLabel }}
+      </button>
+    </div>
+
+    <!-- Toast -->
+    <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute; bottom:74px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:9px; padding:9px 15px; border-radius:10px; background:#26282d; border:1px solid rgba(255,255,255,0.1); box-shadow:0 14px 36px rgba(0,0,0,0.55); color:#e6e7ea; font-size:12.5px; animation:gphFade 0.18s ease;">
+        <span style="width:7px; height:7px; border-radius:50%; background:var(--accent,#b9bec8); flex:none;"></span>
+        {{ toast }}
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: { &quot;width&quot;: 972, &quot;height&quot;: 692 },
+  &quot;accent&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;silver&quot;, &quot;options&quot;: [&quot;silver&quot;, &quot;steel&quot;, &quot;amber&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Graphite&quot; },
+  &quot;showTexture&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Graphite&quot; },
+  &quot;enterKey&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;newline&quot;, &quot;options&quot;: [&quot;newline&quot;, &quot;send&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Behavior&quot; }
+}">
+class Component extends DCLogic {
+  taRef = React.createRef();
+  rootRef = React.createRef();
+  state = { text: '', alwaysOnTop: false, toast: '', copied: false };
+
+  componentDidMount() { this.applyAccent(); const t = this.taRef.current; if (t) t.focus(); }
+  componentDidUpdate() { this.applyAccent(); }
+
+  applyAccent() {
+    const map = {
+      silver: ['#b9bec8', 'rgba(185,190,200,0.32)'],
+      steel:  ['#92a8c6', 'rgba(146,168,198,0.34)'],
+      amber:  ['#d8b27a', 'rgba(216,178,122,0.34)'],
+    };
+    const a = map[this.props.accent] || map.silver;
+    const el = this.rootRef.current;
+    if (el) { el.style.setProperty('--accent', a[0]); el.style.setProperty('--accent-soft', a[1]); }
+  }
+
+  setToast(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 1600);
+  }
+
+  onChange = (e) => this.setState({ text: e.target.value });
+
+  doCopy = async (hide) => {
+    try { await navigator.clipboard.writeText(this.state.text); } catch (e) {}
+    this.setState({ copied: true });
+    clearTimeout(this._c);
+    this._c = setTimeout(() => this.setState({ copied: false }), 1200);
+    this.setToast(hide ? 'Copied — window hidden' : 'Copied to clipboard');
+  };
+
+  onClear = () => { this.setState({ text: '' }); const t = this.taRef.current; if (t) t.focus(); };
+  toggleTop = () => this.setState((s) => ({ alwaysOnTop: !s.alwaysOnTop }));
+
+  onKeyDown = (e) => {
+    if (e.key !== 'Enter') return;
+    const send = this.props.enterKey === 'send';
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey) { e.preventDefault(); this.doCopy(true); return; }
+    if (e.metaKey || e.ctrlKey) { e.preventDefault(); this.doCopy(false); return; }
+    if (send && !e.shiftKey) { e.preventDefault(); this.doCopy(false); }
+  };
+
+  renderVals() {
+    const text = this.state.text;
+    const chars = text.length;
+    const lines = text.split('\n').length;
+    const countLabel = `${chars.toLocaleString()} ${chars === 1 ? 'char' : 'chars'}  ·  ${lines} ${lines === 1 ? 'line' : 'lines'}`;
+    const enterHintLabel = this.props.enterKey === 'send' ? 'Enter to copy' : 'Enter for new line';
+    return {
+      rootRef: this.rootRef,
+      taRef: this.taRef,
+      text,
+      onChange: this.onChange,
+      onKeyDown: this.onKeyDown,
+      countLabel,
+      enterHintLabel,
+      onCopy: () => this.doCopy(false),
+      onCopyHide: () => this.doCopy(true),
+      onClear: this.onClear,
+      alwaysOnTop: this.state.alwaysOnTop,
+      toggleTop: this.toggleTop,
+      showTexture: this.props.showTexture !== false,
+      toast: this.state.toast,
+      hasToast: !!this.state.toast,
+      copyLabel: this.state.copied ? 'Copied' : 'Copy',
+      copyHideLabel: this.state.copied ? 'Copied' : 'Copy & Hide',
+    };
+  }
+}
+</script>
+</body>
+</html>

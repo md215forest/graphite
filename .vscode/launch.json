@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:graphite}",
+            "name": "Debug Graphite",
+            "target": "Graphite",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug Graphite"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:graphite}",
+            "name": "Release Graphite",
+            "target": "Graphite",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release Graphite"
+        }
+    ]
+}

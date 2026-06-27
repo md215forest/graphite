@@ -3,7 +3,7 @@ import SwiftUI
 @main
 struct GraphiteApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @StateObject private var editorState = EditorState()
+    @StateObject private var editorState = EditorState(persistence: .standard)
     @StateObject private var windowState = WindowState()
     @StateObject private var settingsStore = SettingsStore()
 
@@ -19,6 +19,7 @@ struct GraphiteApp: App {
                     windowState.applyAlwaysOnTop(settingsStore.settings.alwaysOnTop)
                 }
         }
+        .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentMinSize)
     }
 }
