@@ -29,11 +29,11 @@ final class SettingsStoreTests: XCTestCase {
     func testPersistsAndRestoresSettings() {
         let store = SettingsStore(defaults: defaults)
 
-        store.settings.copyMode = .codex
+        store.settings.copyMode = .trimmed
         store.settings.alwaysOnTop = true
 
         let restored = SettingsStore(defaults: defaults)
-        XCTAssertEqual(restored.settings.copyMode, .codex)
+        XCTAssertEqual(restored.settings.copyMode, .trimmed)
         XCTAssertTrue(restored.settings.alwaysOnTop)
     }
 
