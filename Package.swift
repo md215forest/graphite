@@ -13,6 +13,11 @@ let package = Package(
         .executableTarget(
             name: "Graphite",
             path: "Graphite"
+        ),
+        .testTarget(
+            name: "GraphiteTests",
+            dependencies: ["Graphite"],
+            path: "GraphiteTests"
         )
     ]
 )
