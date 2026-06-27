@@ -13,7 +13,7 @@ enum CopyMode: String, CaseIterable, Identifiable {
         case .raw: return "Raw"
         case .trimmed: return "Trimmed"
         case .codex: return "Codex"
-        case .githubIssue: return "GitHub Issue"
+        case .githubIssue: return "Issue"
         }
     }
 }

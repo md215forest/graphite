@@ -1,3 +1,5 @@
+import Foundation
+#if canImport(AppKit)
 import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -26,3 +28,4 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 }
+#endif
