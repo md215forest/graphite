@@ -64,17 +64,7 @@ struct PromptEditorView: View {
             PromptTextView(text: $editorState.text)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .contextMenu {
-                    ForEach(CopyMode.allCases) { mode in
-                        Button {
-                            settingsStore.settings.copyMode = mode
-                        } label: {
-                            if settingsStore.settings.copyMode == mode {
-                                Label(mode.title, systemImage: "checkmark")
-                            } else {
-                                Text(mode.title)
-                            }
-                        }
-                    }
+                    copyModeMenuItems
                 }
                 .accessibilityLabel("Prompt editor")
         }
@@ -113,17 +103,7 @@ struct PromptEditorView: View {
             .tint(.gray.opacity(0.35))
 
             Menu {
-                ForEach(CopyMode.allCases) { mode in
-                    Button {
-                        settingsStore.settings.copyMode = mode
-                    } label: {
-                        if settingsStore.settings.copyMode == mode {
-                            Label(mode.title, systemImage: "checkmark")
-                        } else {
-                            Text(mode.title)
-                        }
-                    }
-                }
+                copyModeMenuItems
             } label: {
                 Image(systemName: "ellipsis.circle")
                     .font(.system(size: 14))
@@ -154,6 +134,20 @@ struct PromptEditorView: View {
                 .stroke(Color.gray.opacity(0.15), lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    private var copyModeMenuItems: some View {
+        ForEach(CopyMode.allCases) { mode in
+            Button {
+                settingsStore.settings.copyMode = mode
+            } label: {
+                if settingsStore.settings.copyMode == mode {
+                    Label(mode.title, systemImage: "checkmark")
+                } else {
+                    Text(mode.title)
+                }
+            }
+        }
     }
 
     private var divider: some View {
