@@ -82,6 +82,11 @@ struct PromptEditorView: View {
             Label("\(editorState.characterCount) chars  ・  \(editorState.lineCount) lines", systemImage: "doc.text")
                 .foregroundStyle(Color.gray.opacity(0.8))
 
+            Text(editorState.copiedMessage ?? "Copied")
+                .foregroundStyle(Color.gray.opacity(0.78))
+                .opacity(editorState.copiedMessage == nil ? 0 : 1)
+                .frame(width: 48, alignment: .leading)
+
             Toggle("Always on Top", isOn: Binding(
                 get: { settingsStore.settings.alwaysOnTop },
                 set: {
@@ -157,15 +162,7 @@ struct PromptEditorView: View {
     }
 
     private func copy(andHide: Bool) {
-        let output = CopyFormatter.format(editorState.text, mode: settingsStore.settings.copyMode)
-        clipboardService.copy(output)
-        editorState.copiedMessage = "Copied"
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            if editorState.copiedMessage == "Copied" {
-                editorState.copiedMessage = nil
-            }
-        }
+        editorState.copy(mode: settingsStore.settings.copyMode, clipboardService: clipboardService)
 
         if andHide {
             windowState.hideWindow()
