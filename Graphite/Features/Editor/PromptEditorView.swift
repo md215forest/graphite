@@ -263,7 +263,7 @@ struct PromptEditorView: View {
                 Text("⌘↵")
                     .font(Theme.mono(11))
                     .foregroundStyle(Color(rgb: 0x9296A0))
-                Text(editorState.copiedMessage == nil ? "Copy" : "Copied")
+                Text("Copy")
                     .font(Theme.ui(12.5, .medium))
                     .foregroundStyle(Color(rgb: 0xD2D4D9))
             }
@@ -289,7 +289,7 @@ struct PromptEditorView: View {
                 Text("⇧⌘↵")
                     .font(Theme.mono(11))
                     .foregroundStyle(Color(rgb: 0xB7BAC1))
-                Text(editorState.copiedMessage == nil ? "Copy & Hide" : "Copied")
+                Text("Copy & Hide")
                     .font(Theme.ui(12.5, .semibold))
                     .foregroundStyle(Color(rgb: 0xF0F1F3))
             }
