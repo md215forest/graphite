@@ -4,12 +4,10 @@ import SwiftUI
 struct PromptTextView: NSViewRepresentable {
     @Binding var text: String
     var accent: Color
-    var enterKey: EnterKeyMode
     var focusTrigger: Int
-    var onSubmit: () -> Void
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(text: $text, enterKey: enterKey, onSubmit: onSubmit)
+        Coordinator(text: $text)
     }
 
     func makeNSView(context: Context) -> NSScrollView {
@@ -83,8 +81,6 @@ struct PromptTextView: NSViewRepresentable {
 
     func updateNSView(_ nsView: NSScrollView, context: Context) {
         guard let textView = nsView.documentView as? NSTextView else { return }
-        context.coordinator.enterKey = enterKey
-        context.coordinator.onSubmit = onSubmit
         textView.insertionPointColor = NSColor(accent)
 
         if focusTrigger != context.coordinator.lastFocusTrigger {
@@ -123,43 +119,26 @@ struct PromptTextView: NSViewRepresentable {
 
     final class Coordinator: NSObject, NSTextViewDelegate {
         @Binding var text: String
-        var enterKey: EnterKeyMode
-        var onSubmit: () -> Void
         var lastFocusTrigger: Int = 0
 
-        init(text: Binding<String>, enterKey: EnterKeyMode, onSubmit: @escaping () -> Void) {
+        init(text: Binding<String>) {
             _text = text
-            self.enterKey = enterKey
-            self.onSubmit = onSubmit
         }
 
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
             text = textView.string
         }
-
-        func textView(_ textView: NSTextView, doCommandBy selector: Selector) -> Bool {
-            // Enter-to-copy mode: a bare Return triggers Copy — but never while the
-            // IME is composing (hasMarkedText), so Japanese conversion stays safe.
-            if selector == #selector(NSResponder.insertNewline(_:)),
-                enterKey == .send,
-                !textView.hasMarkedText()
-            {
-                onSubmit()
-                return true
-            }
-            return false
-        }
     }
 }
 
-/// NSTextView that draws a shorter insertion point. The 1.78 line-height makes the
-/// default caret span the full (tall) line; we halve it and centre it on the line.
+/// NSTextView that draws a shorter insertion point. The line-height multiple makes the
+/// default caret span the full (tall) line; we match it to the font instead.
 final class GraphiteTextView: NSTextView {
     override func drawInsertionPoint(in rect: NSRect, color: NSColor, turnedOn flag: Bool) {
-        // The 1.78 line-height inflates the line box; glyphs sit at its top. Match the
-        // caret to the font's natural line height and anchor it there so it lines up
-        // with the text instead of floating in the middle of the tall line box.
+        // The line-height multiple inflates the line box. Match the caret to the font's
+        // natural line height and anchor it so it lines up with the text instead of
+        // floating in the tall line box.
         var caret = rect
         if let font, let layoutManager {
             let natural = layoutManager.defaultLineHeight(for: font)

@@ -150,19 +150,6 @@ struct PromptEditorView: View {
                 }
             }
         }
-        Menu("Enter Key") {
-            ForEach(EnterKeyMode.allCases) { mode in
-                Button {
-                    settingsStore.settings.enterKey = mode
-                } label: {
-                    if settingsStore.settings.enterKey == mode {
-                        Label(mode.title, systemImage: "checkmark")
-                    } else {
-                        Text(mode.title)
-                    }
-                }
-            }
-        }
         Toggle(
             "Show Texture",
             isOn: Binding(
@@ -178,9 +165,7 @@ struct PromptEditorView: View {
             PromptTextView(
                 text: $editorState.text,
                 accent: accent,
-                enterKey: settingsStore.settings.enterKey,
-                focusTrigger: focusTrigger,
-                onSubmit: { copy(andHide: false) }
+                focusTrigger: focusTrigger
             )
             if settingsStore.settings.showTexture {
                 PencilGrain()
@@ -199,9 +184,6 @@ struct PromptEditorView: View {
             alwaysOnTopButton
             clearButton
             separator
-            Text(settingsStore.settings.enterKey.hint)
-                .font(Theme.ui(11.5))
-                .foregroundStyle(Theme.label)
             copyButton
             copyHideButton
         }
