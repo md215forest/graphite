@@ -21,5 +21,8 @@ struct GraphiteApp: App {
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentMinSize)
+        .commands {
+            SettingsCommands(settingsStore: settingsStore)
+        }
     }
 }

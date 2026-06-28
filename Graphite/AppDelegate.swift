@@ -20,12 +20,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             windowState?.attach(window: window)
         }
 
+        // Closing the window doesn't quit the app; reopening from the Dock makes
+        // SwiftUI build a fresh NSWindow. Re-apply the chrome styling (which hides
+        // the native traffic lights) every time a window becomes main, otherwise
+        // the new window shows native controls on top of our custom ones — the
+        // duplicate-controls bug.
         NotificationCenter.default.addObserver(
             forName: NSWindow.didBecomeMainNotification,
             object: nil,
             queue: .main
         ) { [weak self] notification in
             guard let window = notification.object as? NSWindow else { return }
+            self?.styleWindow(window)
             self?.windowState?.attach(window: window)
         }
 
@@ -64,6 +70,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// titlebar, native traffic lights hidden (we draw our own — the single set
     /// that fixes the duplicate-controls bug), rounded translucent shell.
     private func configure(window: NSWindow) {
+        styleWindow(window)
+        window.setContentSize(NSSize(width: 880, height: 600))
+        window.center()
+    }
+
+    /// Idempotent chrome styling. Safe to re-apply whenever a (possibly brand-new)
+    /// window becomes main; unlike `configure` it never resizes or re-centers.
+    private func styleWindow(_ window: NSWindow) {
         window.title = "Graphite"
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
@@ -76,8 +90,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.isOpaque = false
         window.backgroundColor = .clear
         window.hasShadow = true
-
-        window.setContentSize(NSSize(width: 880, height: 600))
-        window.center()
     }
 }

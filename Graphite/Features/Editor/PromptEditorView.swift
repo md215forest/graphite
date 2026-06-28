@@ -9,7 +9,6 @@ struct PromptEditorView: View {
     @State private var focusTrigger = 0
 
     // Hover state for ghost / toolbar controls.
-    @State private var hoverOverflow = false
     @State private var hoverAlwaysOnTop = false
     @State private var hoverClear = false
     @State private var hoverCopy = false
@@ -52,10 +51,6 @@ struct PromptEditorView: View {
                 Spacer()
             }
             brand
-            HStack {
-                Spacer()
-                overflowMenu
-            }
         }
         .padding(.horizontal, 16)
         .frame(height: 40)
@@ -101,74 +96,6 @@ struct PromptEditorView: View {
                 .tracking(0.6)  // 0.04em at 15px
                 .foregroundStyle(Theme.wordmark)
         }
-    }
-
-    private var overflowMenu: some View {
-        Menu {
-            settingsMenuContent
-        } label: {
-            Text("⋯")
-                .font(.system(size: 17))
-                .foregroundStyle(hoverOverflow ? Color(rgb: 0xB3B6BD) : Color(rgb: 0x797C85))
-                .frame(width: 28, height: 28)
-                .background(
-                    RoundedRectangle(cornerRadius: 7, style: .continuous)
-                        .fill(Color.white.opacity(hoverOverflow ? 0.06 : 0))
-                )
-        }
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
-        .fixedSize()
-        .onHover { hoverOverflow = $0 }
-    }
-
-    @ViewBuilder
-    private var settingsMenuContent: some View {
-        Menu("Copy Format") {
-            ForEach(CopyMode.allCases) { mode in
-                Button {
-                    settingsStore.settings.copyMode = mode
-                } label: {
-                    if settingsStore.settings.copyMode == mode {
-                        Label(mode.title, systemImage: "checkmark")
-                    } else {
-                        Text(mode.title)
-                    }
-                }
-            }
-        }
-        Menu("Accent") {
-            ForEach(AccentColor.allCases) { color in
-                Button {
-                    settingsStore.settings.accent = color
-                } label: {
-                    if settingsStore.settings.accent == color {
-                        Label(color.title, systemImage: "checkmark")
-                    } else {
-                        Text(color.title)
-                    }
-                }
-            }
-        }
-        Menu("Show at Cursor") {
-            ForEach(ActivationShortcut.allCases) { shortcut in
-                Button {
-                    settingsStore.settings.activationShortcut = shortcut
-                } label: {
-                    if settingsStore.settings.activationShortcut == shortcut {
-                        Label(shortcut.title, systemImage: "checkmark")
-                    } else {
-                        Text(shortcut.title)
-                    }
-                }
-            }
-        }
-        Toggle(
-            "Show Texture",
-            isOn: Binding(
-                get: { settingsStore.settings.showTexture },
-                set: { settingsStore.settings.showTexture = $0 }
-            ))
     }
 
     // MARK: - Editor
