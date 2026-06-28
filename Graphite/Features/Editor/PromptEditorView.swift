@@ -150,6 +150,19 @@ struct PromptEditorView: View {
                 }
             }
         }
+        Menu("Show at Cursor") {
+            ForEach(ActivationShortcut.allCases) { shortcut in
+                Button {
+                    settingsStore.settings.activationShortcut = shortcut
+                } label: {
+                    if settingsStore.settings.activationShortcut == shortcut {
+                        Label(shortcut.title, systemImage: "checkmark")
+                    } else {
+                        Text(shortcut.title)
+                    }
+                }
+            }
+        }
         Toggle(
             "Show Texture",
             isOn: Binding(

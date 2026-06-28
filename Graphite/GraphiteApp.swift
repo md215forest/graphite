@@ -15,7 +15,7 @@ struct GraphiteApp: App {
                 .environmentObject(settingsStore)
                 .frame(minWidth: 520, minHeight: 380)
                 .onAppear {
-                    appDelegate.bind(windowState: windowState)
+                    appDelegate.bind(windowState: windowState, settingsStore: settingsStore)
                     windowState.applyAlwaysOnTop(settingsStore.settings.alwaysOnTop)
                 }
         }

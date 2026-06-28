@@ -6,6 +6,7 @@ final class SettingsStore: ObservableObject {
         static let alwaysOnTop = "alwaysOnTop"
         static let accent = "accent"
         static let showTexture = "showTexture"
+        static let activationShortcut = "activationShortcut"
     }
 
     private let defaults: UserDefaults
@@ -22,7 +23,8 @@ final class SettingsStore: ObservableObject {
             copyMode: CopyMode(rawValue: defaults.string(forKey: Key.copyMode) ?? "") ?? .raw,
             alwaysOnTop: defaults.object(forKey: Key.alwaysOnTop) as? Bool ?? false,
             accent: AccentColor(rawValue: defaults.string(forKey: Key.accent) ?? "") ?? .silver,
-            showTexture: defaults.object(forKey: Key.showTexture) as? Bool ?? true
+            showTexture: defaults.object(forKey: Key.showTexture) as? Bool ?? true,
+            activationShortcut: ActivationShortcut(rawValue: defaults.string(forKey: Key.activationShortcut) ?? "") ?? .rightOption
         )
     }
 
@@ -31,5 +33,6 @@ final class SettingsStore: ObservableObject {
         defaults.set(settings.alwaysOnTop, forKey: Key.alwaysOnTop)
         defaults.set(settings.accent.rawValue, forKey: Key.accent)
         defaults.set(settings.showTexture, forKey: Key.showTexture)
+        defaults.set(settings.activationShortcut.rawValue, forKey: Key.activationShortcut)
     }
 }

@@ -3,6 +3,7 @@
 xcuserdata/
 DerivedData/
 .build/
+dist/
 .cache/
 .swiftpm/
 .env

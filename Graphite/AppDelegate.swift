@@ -1,9 +1,12 @@
 import AppKit
 import Carbon.HIToolbox
+import Combine
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private weak var windowState: WindowState?
     private var showHotkey: GlobalHotkey?
+    private var activationMonitor: DoubleTapMonitor?
+    private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Running as an unbundled SwiftPM executable (swift run / VSCode) launches
@@ -26,21 +29,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.windowState?.attach(window: window)
         }
 
-        // Global re-show shortcut: ⌘⇧G brings the window back after Copy & Hide.
+        // Global re-show shortcut: ⌘⇧G brings the window back at the cursor after
+        // Copy & Hide, so it appears where you're already looking.
         showHotkey = GlobalHotkey(
             keyCode: UInt32(kVK_ANSI_G),
             modifiers: UInt32(cmdKey | shiftKey)
         ) { [weak self] in
-            self?.windowState?.showWindow()
+            self?.windowState?.showWindowAtCursor()
         }
     }
 
-    func bind(windowState: WindowState) {
+    func bind(windowState: WindowState, settingsStore: SettingsStore) {
         self.windowState = windowState
         if let window = NSApplication.shared.windows.first {
             configure(window: window)
             windowState.attach(window: window)
         }
+
+        // Double-tap activation: re-show at the cursor. Set up once, then follow
+        // changes from the settings menu.
+        guard activationMonitor == nil else { return }
+        let monitor = DoubleTapMonitor(shortcut: settingsStore.settings.activationShortcut) { [weak self] in
+            self?.windowState?.showWindowAtCursor()
+        }
+        activationMonitor = monitor
+        settingsStore.$settings
+            .map(\.activationShortcut)
+            .removeDuplicates()
+            .sink { [weak monitor] shortcut in monitor?.update(shortcut: shortcut) }
+            .store(in: &cancellables)
     }
 
     /// Frameless / custom-title-bar window per the handoff: 880×600, transparent
