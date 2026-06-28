@@ -15,6 +15,17 @@ final class WindowState: ObservableObject {
         window?.orderOut(nil)
     }
 
+    /// Toggle visibility from the activation shortcut: if the window is already the
+    /// focused frontmost window, hide it; otherwise summon it to the cursor.
+    func toggleWindowAtCursor() {
+        guard let window else { return }
+        if NSApp.isActive && window.isKeyWindow {
+            hideWindow()
+        } else {
+            showWindowAtCursor()
+        }
+    }
+
     /// Re-show and focus the window, e.g. from the global show/hide shortcut.
     func showWindow() {
         NSApp.activate(ignoringOtherApps: true)

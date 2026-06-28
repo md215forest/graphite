@@ -35,13 +35,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.windowState?.attach(window: window)
         }
 
-        // Global re-show shortcut: ⌘⇧G brings the window back at the cursor after
-        // Copy & Hide, so it appears where you're already looking.
+        // Global show/hide shortcut: ⌘⇧G toggles the focused window, or summons it
+        // at the cursor so it appears where you're already looking.
         showHotkey = GlobalHotkey(
             keyCode: UInt32(kVK_ANSI_G),
             modifiers: UInt32(cmdKey | shiftKey)
         ) { [weak self] in
-            self?.windowState?.showWindowAtCursor()
+            self?.windowState?.toggleWindowAtCursor()
         }
     }
 
@@ -56,7 +56,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // changes from the settings menu.
         guard activationMonitor == nil else { return }
         let monitor = DoubleTapMonitor(shortcut: settingsStore.settings.activationShortcut) { [weak self] in
-            self?.windowState?.showWindowAtCursor()
+            self?.windowState?.toggleWindowAtCursor()
         }
         activationMonitor = monitor
         settingsStore.$settings
