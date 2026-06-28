@@ -173,7 +173,7 @@ Issue や Pull Request は歓迎します。
 
 ## ライセンス
 
-現時点ではライセンスファイルは未設定です。OSS として公開する場合は、公開前に LICENSE ファイルを追加してください。
+Graphite は [MIT License](LICENSE) のもとで公開されています。
 
 ---
 
@@ -352,4 +352,4 @@ Before proposing a change, please make sure it fits the direction of the project
 
 ## License
 
-No license file is currently configured. If this project is published as open source, add a LICENSE file before release.
+Graphite is released under the [MIT License](LICENSE).

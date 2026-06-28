@@ -39,7 +39,7 @@ struct PromptTextView: NSViewRepresentable {
             frame: NSRect(x: 0, y: 0, width: 200, height: 200), textContainer: container)
         textView.isRichText = false
         textView.allowsUndo = true
-        // IME safety: keep all auto-substitution off (see refactor-instructions).
+        // IME safety: keep all auto-substitution off.
         textView.isAutomaticQuoteSubstitutionEnabled = false
         textView.isAutomaticDashSubstitutionEnabled = false
         textView.isAutomaticTextReplacementEnabled = false

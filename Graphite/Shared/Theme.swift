@@ -1,9 +1,8 @@
 import SwiftUI
 import AppKit
 
-// Design tokens recreated from design_handoff_graphite/README.md.
-// Values (colors, spacing, typography) are kept literal so the handoff
-// numbers can be cross-checked against this file directly.
+// Design tokens for Graphite. Values (colors, spacing, typography) are kept
+// literal so the design numbers can be cross-checked against this file directly.
 enum Theme {
     // MARK: Accent
 
