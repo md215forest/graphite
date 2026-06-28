@@ -4,6 +4,8 @@ import SwiftUI
 struct PromptTextView: NSViewRepresentable {
     @Binding var text: String
     var accent: Color
+    var textColor: Color
+    var selectionColor: NSColor
     var focusTrigger: Int
 
     func makeCoordinator() -> Coordinator {
@@ -49,7 +51,7 @@ struct PromptTextView: NSViewRepresentable {
 
         let font = Theme.editorNSFont(size: 15)
         textView.font = font
-        textView.textColor = NSColor(Theme.textPrimary)
+        textView.textColor = NSColor(textColor)
         textView.insertionPointColor = NSColor(accent)
         textView.backgroundColor = .clear
         textView.drawsBackground = false
@@ -62,13 +64,10 @@ struct PromptTextView: NSViewRepresentable {
         textView.maxSize = NSSize(
             width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
 
-        textView.selectedTextAttributes = [
-            .backgroundColor: NSColor(
-                red: 185 / 255, green: 190 / 255, blue: 200 / 255, alpha: 0.22)
-        ]
+        textView.selectedTextAttributes = [.backgroundColor: selectionColor]
 
         textView.defaultParagraphStyle = Self.paragraphStyle
-        textView.typingAttributes = Self.attributes(font: font, color: NSColor(Theme.textPrimary))
+        textView.typingAttributes = Self.attributes(font: font, color: NSColor(textColor))
 
         textView.delegate = context.coordinator
         scrollView.documentView = textView
@@ -81,7 +80,18 @@ struct PromptTextView: NSViewRepresentable {
 
     func updateNSView(_ nsView: NSScrollView, context: Context) {
         guard let textView = nsView.documentView as? NSTextView else { return }
+        let nsTextColor = NSColor(textColor)
+        textView.textColor = nsTextColor
         textView.insertionPointColor = NSColor(accent)
+        textView.selectedTextAttributes = [.backgroundColor: selectionColor]
+        textView.typingAttributes = Self.attributes(
+            font: textView.font ?? Theme.editorNSFont(),
+            color: nsTextColor
+        )
+        if let storage = textView.textStorage {
+            let full = NSRange(location: 0, length: storage.length)
+            storage.addAttribute(.foregroundColor, value: nsTextColor, range: full)
+        }
 
         if focusTrigger != context.coordinator.lastFocusTrigger {
             context.coordinator.lastFocusTrigger = focusTrigger
@@ -95,7 +105,8 @@ struct PromptTextView: NSViewRepresentable {
             let range = NSRange(location: 0, length: (text as NSString).length)
             textView.textStorage?.setAttributes(
                 Self.attributes(
-                    font: textView.font ?? Theme.editorNSFont(), color: NSColor(Theme.textPrimary)),
+                    font: textView.font ?? Theme.editorNSFont(),
+                    color: nsTextColor),
                 range: range
             )
             textView.needsDisplay = true

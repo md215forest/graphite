@@ -49,6 +49,20 @@ enum Theme {
         endRadiusFraction: 0.85
     )
 
+    /// Window background gradient derived from a user-chosen base color. Keeps the
+    /// existing elliptical shape; the center stop is a slightly brighter shade.
+    static func windowGradient(base: RGBAColor) -> EllipticalGradient {
+        EllipticalGradient(
+            stops: [
+                .init(color: base.lightened(by: 0.18).color, location: 0.0),
+                .init(color: base.color, location: 0.58)
+            ],
+            center: UnitPoint(x: 0.5, y: -0.12),
+            startRadiusFraction: 0,
+            endRadiusFraction: 0.85
+        )
+    }
+
     static let footerGradient = LinearGradient(
         colors: [Color(rgb: 0x171819), Color(rgb: 0x141517)],
         startPoint: .top,

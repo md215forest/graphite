@@ -7,6 +7,10 @@ final class SettingsStore: ObservableObject {
         static let accent = "accent"
         static let showTexture = "showTexture"
         static let activationShortcut = "activationShortcut"
+        static let windowOpacity = "windowOpacity"
+        static let textColor = "textColor"
+        static let windowColor = "windowColor"
+        static let selectionColor = "selectionColor"
     }
 
     private let defaults: UserDefaults
@@ -24,7 +28,14 @@ final class SettingsStore: ObservableObject {
             alwaysOnTop: defaults.object(forKey: Key.alwaysOnTop) as? Bool ?? false,
             accent: AccentColor(rawValue: defaults.string(forKey: Key.accent) ?? "") ?? .silver,
             showTexture: defaults.object(forKey: Key.showTexture) as? Bool ?? true,
-            activationShortcut: ActivationShortcut(rawValue: defaults.string(forKey: Key.activationShortcut) ?? "") ?? .rightOption
+            activationShortcut: ActivationShortcut(rawValue: defaults.string(forKey: Key.activationShortcut) ?? "") ?? .rightOption,
+            windowOpacity: {
+                let value = defaults.object(forKey: Key.windowOpacity) as? Double ?? 1.0
+                return min(max(value, AppSettings.opacityRange.lowerBound), AppSettings.opacityRange.upperBound)
+            }(),
+            textColor: (defaults.string(forKey: Key.textColor).flatMap(RGBAColor.init(hexString:))) ?? RGBAColor(rgb: 0xE6E7EA),
+            windowColor: (defaults.string(forKey: Key.windowColor).flatMap(RGBAColor.init(hexString:))) ?? RGBAColor(rgb: 0x191A1D),
+            selectionColor: (defaults.string(forKey: Key.selectionColor).flatMap(RGBAColor.init(hexString:))) ?? RGBAColor(rgb: 0xB9BEC8, alpha: 0.22)
         )
     }
 
@@ -34,5 +45,9 @@ final class SettingsStore: ObservableObject {
         defaults.set(settings.accent.rawValue, forKey: Key.accent)
         defaults.set(settings.showTexture, forKey: Key.showTexture)
         defaults.set(settings.activationShortcut.rawValue, forKey: Key.activationShortcut)
+        defaults.set(settings.windowOpacity, forKey: Key.windowOpacity)
+        defaults.set(settings.textColor.hexString, forKey: Key.textColor)
+        defaults.set(settings.windowColor.hexString, forKey: Key.windowColor)
+        defaults.set(settings.selectionColor.hexString, forKey: Key.selectionColor)
     }
 }

@@ -16,6 +16,10 @@ struct PromptEditorView: View {
 
     private var accent: Color { Theme.accent(settingsStore.settings.accent) }
     private var accentSoft: Color { Theme.accentSoft(settingsStore.settings.accent) }
+    private var windowOpacity: Double { settingsStore.settings.windowOpacity }
+    private var windowBackground: EllipticalGradient {
+        Theme.windowGradient(base: settingsStore.settings.windowColor)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -25,7 +29,7 @@ struct PromptEditorView: View {
             sheenDivider(0.07)
             footer
         }
-        .background(Theme.windowGradient)
+        .background(windowBackground.opacity(windowOpacity))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -105,6 +109,8 @@ struct PromptEditorView: View {
             PromptTextView(
                 text: $editorState.text,
                 accent: accent,
+                textColor: settingsStore.settings.textColor.color,
+                selectionColor: settingsStore.settings.selectionColor.nsColor,
                 focusTrigger: focusTrigger
             )
             if settingsStore.settings.showTexture {
@@ -130,7 +136,7 @@ struct PromptEditorView: View {
         .padding(.leading, 18)
         .padding(.trailing, 16)
         .frame(height: 58)
-        .background(Theme.footerGradient)
+        .background(Theme.footerGradient.opacity(windowOpacity))
     }
 
     private var counter: some View {

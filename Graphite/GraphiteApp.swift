@@ -24,5 +24,9 @@ struct GraphiteApp: App {
         .commands {
             SettingsCommands(settingsStore: settingsStore)
         }
+
+        Settings {
+            AppearanceSettingsView(settingsStore: settingsStore)
+        }
     }
 }

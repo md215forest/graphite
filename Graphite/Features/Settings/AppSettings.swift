@@ -62,4 +62,13 @@ struct AppSettings {
     var accent: AccentColor = .silver
     var showTexture: Bool = true
     var activationShortcut: ActivationShortcut = .rightOption
+    // Appearance
+    var windowOpacity: Double = 1.0
+    var textColor: RGBAColor = RGBAColor(rgb: 0xE6E7EA)
+    var windowColor: RGBAColor = RGBAColor(rgb: 0x191A1D)
+    var selectionColor: RGBAColor = RGBAColor(rgb: 0xB9BEC8, alpha: 0.22)
+}
+
+extension AppSettings {
+    static let opacityRange: ClosedRange<Double> = 0.3...1.0
 }
