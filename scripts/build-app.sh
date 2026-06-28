@@ -16,7 +16,7 @@ set -euo pipefail
 APP_NAME="Graphite"
 BUNDLE_ID="com.graphite.app"
 VERSION="1.0.0"
-MIN_MACOS="13.0"
+MIN_MACOS="14.0"
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIST="$ROOT/dist"

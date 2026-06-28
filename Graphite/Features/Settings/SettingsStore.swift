@@ -11,6 +11,7 @@ final class SettingsStore: ObservableObject {
         static let textColor = "textColor"
         static let windowColor = "windowColor"
         static let selectionColor = "selectionColor"
+        static let templates = "templates"
     }
 
     private let defaults: UserDefaults
@@ -35,7 +36,13 @@ final class SettingsStore: ObservableObject {
             }(),
             textColor: (defaults.string(forKey: Key.textColor).flatMap(RGBAColor.init(hexString:))) ?? RGBAColor(rgb: 0xE6E7EA),
             windowColor: (defaults.string(forKey: Key.windowColor).flatMap(RGBAColor.init(hexString:))) ?? RGBAColor(rgb: 0x191A1D),
-            selectionColor: (defaults.string(forKey: Key.selectionColor).flatMap(RGBAColor.init(hexString:))) ?? RGBAColor(rgb: 0xB9BEC8, alpha: 0.22)
+            selectionColor: (defaults.string(forKey: Key.selectionColor).flatMap(RGBAColor.init(hexString:))) ?? RGBAColor(rgb: 0xB9BEC8, alpha: 0.22),
+            templates: {
+                guard let data = defaults.data(forKey: Key.templates),
+                      let decoded = try? JSONDecoder().decode([Template].self, from: data)
+                else { return [] }
+                return decoded
+            }()
         )
     }
 
@@ -49,5 +56,8 @@ final class SettingsStore: ObservableObject {
         defaults.set(settings.textColor.hexString, forKey: Key.textColor)
         defaults.set(settings.windowColor.hexString, forKey: Key.windowColor)
         defaults.set(settings.selectionColor.hexString, forKey: Key.selectionColor)
+        if let data = try? JSONEncoder().encode(settings.templates) {
+            defaults.set(data, forKey: Key.templates)
+        }
     }
 }

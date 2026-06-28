@@ -75,7 +75,7 @@ Graphite はローカルで動作するエディタです。
 
 ## 必要環境
 
-- macOS 13 以降
+- macOS 14 以降
 - Swift Package Manager
 - Xcode または Swift toolchain
 
@@ -254,7 +254,7 @@ Graphite is a local editor.
 
 ## Requirements
 
-- macOS 13 or later
+- macOS 14 or later
 - Swift Package Manager
 - Xcode or a Swift toolchain
 

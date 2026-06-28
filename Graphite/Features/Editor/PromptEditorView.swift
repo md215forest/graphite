@@ -4,12 +4,18 @@ struct PromptEditorView: View {
     @EnvironmentObject private var editorState: EditorState
     @EnvironmentObject private var windowState: WindowState
     @EnvironmentObject private var settingsStore: SettingsStore
+    @Environment(\.openSettings) private var openSettings
+    @AppStorage(SettingsTab.storageKey) private var settingsTab = SettingsTab.appearance
 
     private let clipboardService = ClipboardService()
     @State private var focusTrigger = 0
+    @State private var pendingTemplate: Template?
+    @State private var showOverwriteConfirm = false
+    @State private var showTemplates = false
 
     // Hover state for ghost / toolbar controls.
     @State private var hoverAlwaysOnTop = false
+    @State private var hoverTemplates = false
     @State private var hoverClear = false
     @State private var hoverCopy = false
     @State private var hoverCopyHide = false
@@ -43,6 +49,17 @@ struct PromptEditorView: View {
                 .padding(.horizontal, 1)
         }
         .overlay(alignment: .bottom) { toast }
+        .alert("Replace current text?", isPresented: $showOverwriteConfirm) {
+            Button("Cancel", role: .cancel) { pendingTemplate = nil }
+            Button("Overwrite", role: .destructive) {
+                if let template = pendingTemplate {
+                    applyTemplate(template)
+                }
+                pendingTemplate = nil
+            }
+        } message: {
+            Text("The editor already has text. Applying this template will replace it.")
+        }
         .disabled(windowState.inputBlocked)
         .opacity(windowState.inputBlocked ? 0.6 : 1.0)
         .animation(.easeInOut(duration: 0.15), value: windowState.inputBlocked)
@@ -131,6 +148,7 @@ struct PromptEditorView: View {
         HStack(spacing: 12) {
             counter
             Spacer()
+            templatesMenu
             alwaysOnTopButton
             clearButton
             separator
@@ -152,6 +170,76 @@ struct PromptEditorView: View {
                 .font(Theme.mono(11.5))
                 .foregroundStyle(Theme.labelMuted)
         }
+    }
+
+    private var templatesMenu: some View {
+        Button(action: { showTemplates = true }) {
+            HStack(spacing: 7) {
+                Image(systemName: "doc.text")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color(rgb: 0x9296A0))
+                Text("Template")
+                    .font(Theme.ui(12.5, .medium))
+                    .foregroundStyle(Color(rgb: 0xD2D4D9))
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.white.opacity(hoverTemplates ? 0.07 : 0.03))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(Color.white.opacity(hoverTemplates ? 0.16 : 0.10), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .onHover { hoverTemplates = $0 }
+        .popover(isPresented: $showTemplates, arrowEdge: .top) {
+            templatePopover
+        }
+    }
+
+    /// Template chooser shown when the footer Template button is pressed.
+    private var templatePopover: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            if settingsStore.settings.templates.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("No templates")
+                        .font(Theme.ui(12.5))
+                        .foregroundStyle(.secondary)
+                    Button {
+                        showTemplates = false
+                        settingsTab = SettingsTab.templates
+                        openSettings()
+                    } label: {
+                        Text("Add in Settings…")
+                            .font(Theme.ui(12.5, .medium))
+                            .foregroundStyle(accent)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+            } else {
+                ForEach(settingsStore.settings.templates) { template in
+                    Button {
+                        showTemplates = false
+                        requestApply(template)
+                    } label: {
+                        Text(template.name.isEmpty ? "Untitled" : template.name)
+                            .font(Theme.ui(12.5))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(6)
+        .frame(minWidth: 180)
     }
 
     private var alwaysOnTopButton: some View {
@@ -307,6 +395,20 @@ struct PromptEditorView: View {
     }
 
     // MARK: - Actions
+
+    private func requestApply(_ template: Template) {
+        if editorState.text.isEmpty {
+            applyTemplate(template)
+        } else {
+            pendingTemplate = template
+            showOverwriteConfirm = true
+        }
+    }
+
+    private func applyTemplate(_ template: Template) {
+        editorState.text = template.body
+        focusTrigger += 1
+    }
 
     private func copy(andHide: Bool) {
         editorState.copy(mode: settingsStore.settings.copyMode, clipboardService: clipboardService)

@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "Graphite",
     platforms: [
-        .macOS(.v13)
+        .macOS(.v14)
     ],
     products: [
         .executable(name: "Graphite", targets: ["Graphite"])

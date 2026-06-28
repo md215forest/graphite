@@ -67,6 +67,7 @@ struct AppSettings {
     var textColor: RGBAColor = RGBAColor(rgb: 0xE6E7EA)
     var windowColor: RGBAColor = RGBAColor(rgb: 0x191A1D)
     var selectionColor: RGBAColor = RGBAColor(rgb: 0xB9BEC8, alpha: 0.22)
+    var templates: [Template] = []
 }
 
 extension AppSettings {

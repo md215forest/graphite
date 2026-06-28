@@ -2,7 +2,6 @@ import SwiftUI
 
 struct AppearanceSettingsView: View {
     @ObservedObject var settingsStore: SettingsStore
-    let windowState: WindowState
 
     var body: some View {
         Form {
@@ -37,12 +36,6 @@ struct AppearanceSettingsView: View {
         }
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
-        .background {
-            Color(nsColor: .windowBackgroundColor)
-            SettingsWindowConfigurator(windowState: windowState)
-        }
-        .preferredColorScheme(.light)
-        .frame(width: 420, height: 340)
     }
 
     /// Bridge an `RGBAColor` settings field to a `ColorPicker`'s `Color` binding.

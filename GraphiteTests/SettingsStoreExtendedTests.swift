@@ -66,4 +66,14 @@ final class SettingsStoreExtendedTests: XCTestCase {
         XCTAssertEqual(store.settings.windowColor.hexString, "336699FF")
         XCTAssertEqual(store.settings.selectionColor.hexString, "11223344")
     }
+
+    func testTemplatesPersistAndRestore() {
+        let store = SettingsStore(defaults: defaults)
+        store.settings.templates = [Template(name: "Greeting", body: "Hello")]
+
+        let restored = SettingsStore(defaults: defaults)
+        XCTAssertEqual(restored.settings.templates.count, 1)
+        XCTAssertEqual(restored.settings.templates.first?.name, "Greeting")
+        XCTAssertEqual(restored.settings.templates.first?.body, "Hello")
+    }
 }
