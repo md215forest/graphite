@@ -1,6 +1,9 @@
 import AppKit
 
 final class WindowState: ObservableObject {
+    /// True while the Settings window is open; the editor blocks input and dims.
+    @Published var inputBlocked: Bool = false
+
     private weak var window: NSWindow?
 
     func attach(window: NSWindow) {

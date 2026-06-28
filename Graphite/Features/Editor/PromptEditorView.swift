@@ -43,6 +43,9 @@ struct PromptEditorView: View {
                 .padding(.horizontal, 1)
         }
         .overlay(alignment: .bottom) { toast }
+        .disabled(windowState.inputBlocked)
+        .opacity(windowState.inputBlocked ? 0.6 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: windowState.inputBlocked)
         .ignoresSafeArea()
     }
 
@@ -111,7 +114,8 @@ struct PromptEditorView: View {
                 accent: accent,
                 textColor: settingsStore.settings.textColor.color,
                 selectionColor: settingsStore.settings.selectionColor.nsColor,
-                focusTrigger: focusTrigger
+                focusTrigger: focusTrigger,
+                isEditable: !windowState.inputBlocked
             )
             if settingsStore.settings.showTexture {
                 PencilGrain()

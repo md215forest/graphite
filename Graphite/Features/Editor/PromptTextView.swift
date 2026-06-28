@@ -7,6 +7,7 @@ struct PromptTextView: NSViewRepresentable {
     var textColor: Color
     var selectionColor: NSColor
     var focusTrigger: Int
+    var isEditable: Bool
 
     func makeCoordinator() -> Coordinator {
         Coordinator(text: $text)
@@ -40,6 +41,7 @@ struct PromptTextView: NSViewRepresentable {
         let textView = GraphiteTextView(
             frame: NSRect(x: 0, y: 0, width: 200, height: 200), textContainer: container)
         textView.isRichText = false
+        textView.isEditable = isEditable
         textView.allowsUndo = true
         // IME safety: keep all auto-substitution off.
         textView.isAutomaticQuoteSubstitutionEnabled = false
@@ -82,6 +84,7 @@ struct PromptTextView: NSViewRepresentable {
         guard let textView = nsView.documentView as? NSTextView else { return }
         let nsTextColor = NSColor(textColor)
         textView.textColor = nsTextColor
+        textView.isEditable = isEditable
         textView.insertionPointColor = NSColor(accent)
         textView.selectedTextAttributes = [.backgroundColor: selectionColor]
         textView.typingAttributes = Self.attributes(

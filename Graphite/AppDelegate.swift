@@ -2,6 +2,10 @@ import AppKit
 import Carbon.HIToolbox
 import Combine
 
+enum WindowID {
+    static let settings = "graphite.settings"
+}
+
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private weak var windowState: WindowState?
     private var showHotkey: GlobalHotkey?
@@ -31,6 +35,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             queue: .main
         ) { [weak self] notification in
             guard let window = notification.object as? NSWindow else { return }
+            // The Settings window manages its own normal chrome; never apply the editor's
+            // custom (traffic-lights-hidden) styling to it.
+            guard window.identifier?.rawValue != WindowID.settings else { return }
             self?.styleWindow(window)
             self?.windowState?.attach(window: window)
         }

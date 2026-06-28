@@ -26,7 +26,7 @@ struct GraphiteApp: App {
         }
 
         Settings {
-            AppearanceSettingsView(settingsStore: settingsStore)
+            AppearanceSettingsView(settingsStore: settingsStore, windowState: windowState)
         }
     }
 }

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AppearanceSettingsView: View {
     @ObservedObject var settingsStore: SettingsStore
+    let windowState: WindowState
 
     var body: some View {
         Form {
@@ -36,7 +37,10 @@ struct AppearanceSettingsView: View {
         }
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
-        .background(Color(white: 0.96))
+        .background {
+            Color(white: 0.96)
+            SettingsWindowConfigurator(windowState: windowState)
+        }
         .preferredColorScheme(.light)
         .frame(width: 420, height: 340)
     }
