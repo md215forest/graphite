@@ -38,7 +38,7 @@ struct AppearanceSettingsView: View {
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
         .background {
-            Color(white: 0.96)
+            Color(nsColor: .windowBackgroundColor)
             SettingsWindowConfigurator(windowState: windowState)
         }
         .preferredColorScheme(.light)
