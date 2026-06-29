@@ -204,23 +204,11 @@ struct PromptEditorView: View {
     private var templatePopover: some View {
         VStack(alignment: .leading, spacing: 1) {
             if settingsStore.settings.templates.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("No templates")
-                        .font(Theme.ui(12.5))
-                        .foregroundStyle(.secondary)
-                    Button {
-                        showTemplates = false
-                        settingsTab = SettingsTab.templates
-                        openSettings()
-                    } label: {
-                        Text("Add in Settings…")
-                            .font(Theme.ui(12.5, .medium))
-                            .foregroundStyle(accent)
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
+                Text("No templates")
+                    .font(Theme.ui(12.5))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
             } else {
                 ForEach(settingsStore.settings.templates) { template in
                     Button {
@@ -237,6 +225,28 @@ struct PromptEditorView: View {
                     .buttonStyle(.plain)
                 }
             }
+
+            Divider()
+                .padding(.vertical, 4)
+
+            Button {
+                showTemplates = false
+                settingsTab = SettingsTab.templates
+                openSettings()
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 10))
+                    Text("Add in Settings…")
+                        .font(Theme.ui(12.5, .medium))
+                }
+                .foregroundStyle(accent)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
         }
         .padding(6)
         .frame(minWidth: 180)
