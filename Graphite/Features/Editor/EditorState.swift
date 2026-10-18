@@ -56,6 +56,7 @@ final class EditorState: ObservableObject {
     ) -> String {
         let output = CopyFormatter.format(text, mode: mode)
         clipboardService.copy(output)
+        guard !copyHistory.contains(text) else { return output }
         copyHistory.insert(text, at: 0)
         copyHistory = Array(copyHistory.prefix(EditorState.historyLimit))
         persistence?.set(copyHistory, forKey: EditorState.historyKey)

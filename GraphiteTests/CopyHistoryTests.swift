@@ -44,16 +44,39 @@ final class CopyHistoryTests: XCTestCase {
         XCTAssertEqual(state.copyHistory, [state.text])
     }
 
-    func testEachCopyIsRecordedIncludingDuplicatesAndEmptyText() {
+    func testDuplicateCopiesAreSkippedAndEmptyTextIsRecordedOnce() {
         let state = EditorState()
         state.text = "Repeated"
         state.copy(mode: .raw, clipboardService: clipboard)
         state.copy(mode: .raw, clipboardService: clipboard)
         state.text = ""
         state.copy(mode: .raw, clipboardService: clipboard)
+        state.copy(mode: .raw, clipboardService: clipboard)
 
-        XCTAssertEqual(state.copyHistory, ["", "Repeated", "Repeated"])
+        XCTAssertEqual(state.copyHistory, ["", "Repeated"])
         XCTAssertTrue(EditorState(persistence: defaults).copyHistory.isEmpty)
+    }
+
+    func testCopyMatchingOlderEntryPreservesOrderAndStillCopies() {
+        let state = EditorState(persistence: defaults)
+        for text in ["First", "Second", "First"] {
+            state.text = text
+            state.copy(mode: .raw, clipboardService: clipboard)
+        }
+
+        XCTAssertEqual(state.copyHistory, ["Second", "First"])
+        XCTAssertEqual(EditorState(persistence: defaults).copyHistory, ["Second", "First"])
+        XCTAssertEqual(pasteboard.string(forType: .string), "First")
+    }
+
+    func testWhitespaceDifferencesRemainSeparateHistoryEntries() {
+        let state = EditorState()
+        for text in ["Text", " Text", "Text\n"] {
+            state.text = text
+            state.copy(mode: .trimmed, clipboardService: clipboard)
+        }
+
+        XCTAssertEqual(state.copyHistory, ["Text\n", " Text", "Text"])
     }
 
     func testEditingOrRestoringTextDoesNotRecordHistory() {
