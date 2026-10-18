@@ -79,6 +79,39 @@ final class CopyHistoryTests: XCTestCase {
         XCTAssertEqual(state.copyHistory, ["Text\n", " Text", "Text"])
     }
 
+    func testDeletingHistoryEntryPersistsAndPreservesDraftAndOtherEntries() {
+        let state = EditorState(persistence: defaults)
+        let prefix = String(repeating: "a", count: 20)
+        for text in [prefix + "first", prefix + "second", "Third"] {
+            state.text = text
+            state.copy(mode: .raw, clipboardService: clipboard)
+        }
+        state.text = "Current draft"
+
+        state.deleteHistoryEntry(prefix + "second")
+
+        let expected = ["Third", prefix + "first"]
+        XCTAssertEqual(state.copyHistory, expected)
+        XCTAssertEqual(EditorState(persistence: defaults).copyHistory, expected)
+        XCTAssertEqual(state.text, "Current draft")
+        XCTAssertEqual(pasteboard.string(forType: .string), "Third")
+        state.deleteHistoryEntry("Missing")
+        XCTAssertEqual(state.copyHistory, expected)
+    }
+
+    func testDeletingLastEntryPersistsEmptyHistoryAndAllowsCopyingAgain() {
+        let state = EditorState(persistence: defaults)
+        state.text = "Saved"
+        state.copy(mode: .raw, clipboardService: clipboard)
+
+        state.deleteHistoryEntry("Saved")
+
+        XCTAssertTrue(state.copyHistory.isEmpty)
+        XCTAssertTrue(EditorState(persistence: defaults).copyHistory.isEmpty)
+        state.copy(mode: .raw, clipboardService: clipboard)
+        XCTAssertEqual(state.copyHistory, ["Saved"])
+    }
+
     func testEditingOrRestoringTextDoesNotRecordHistory() {
         let state = EditorState(persistence: defaults)
         state.text = "Saved"

@@ -63,6 +63,12 @@ final class EditorState: ObservableObject {
         return output
     }
 
+    func deleteHistoryEntry(_ text: String) {
+        guard let index = copyHistory.firstIndex(of: text) else { return }
+        copyHistory.remove(at: index)
+        persistence?.set(copyHistory, forKey: EditorState.historyKey)
+    }
+
     func showToast(_ message: String, clearAfter delay: TimeInterval = 1.6) {
         clearToastWorkItem?.cancel()
         toast = message

@@ -257,6 +257,13 @@ struct PromptEditorView: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .contextMenu {
+                        Button(role: .destructive) {
+                            editorState.deleteHistoryEntry(text)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
                 }
             }
         }
