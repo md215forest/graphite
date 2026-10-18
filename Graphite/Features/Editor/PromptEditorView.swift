@@ -9,13 +9,16 @@ struct PromptEditorView: View {
 
     private let clipboardService = ClipboardService()
     @State private var focusTrigger = 0
-    @State private var pendingTemplate: Template?
+    @State private var pendingText: String?
+    @State private var restoringHistory = false
     @State private var showOverwriteConfirm = false
     @State private var showTemplates = false
+    @State private var showHistory = false
 
     // Hover state for ghost / toolbar controls.
     @State private var hoverAlwaysOnTop = false
     @State private var hoverTemplates = false
+    @State private var hoverHistory = false
     @State private var hoverClear = false
     @State private var hoverCopy = false
     @State private var hoverCopyHide = false
@@ -50,15 +53,17 @@ struct PromptEditorView: View {
         }
         .overlay(alignment: .bottom) { toast }
         .alert("Replace current text?", isPresented: $showOverwriteConfirm) {
-            Button("Cancel", role: .cancel) { pendingTemplate = nil }
+            Button("Cancel", role: .cancel) { pendingText = nil }
             Button("Overwrite", role: .destructive) {
-                if let template = pendingTemplate {
-                    applyTemplate(template)
+                if let text = pendingText {
+                    applyText(text)
                 }
-                pendingTemplate = nil
+                pendingText = nil
             }
         } message: {
-            Text("The editor already has text. Applying this template will replace it.")
+            Text(restoringHistory
+                ? "The editor already has text. Restoring this history entry will replace it."
+                : "The editor already has text. Applying this template will replace it.")
         }
         .disabled(windowState.inputBlocked)
         .opacity(windowState.inputBlocked ? 0.6 : 1.0)
@@ -148,6 +153,7 @@ struct PromptEditorView: View {
         HStack(spacing: 12) {
             counter
             Spacer()
+            historyMenu
             templatesMenu
             alwaysOnTopButton
             clearButton
@@ -200,6 +206,64 @@ struct PromptEditorView: View {
         }
     }
 
+    private var historyMenu: some View {
+        Button(action: { showHistory = true }) {
+            HStack(spacing: 7) {
+                Image(systemName: "clock.arrow.circlepath")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color(rgb: 0x9296A0))
+                Text("History")
+                    .font(Theme.ui(12.5, .medium))
+                    .foregroundStyle(Color(rgb: 0xD2D4D9))
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.white.opacity(hoverHistory ? 0.07 : 0.03))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(Color.white.opacity(hoverHistory ? 0.16 : 0.10), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .onHover { hoverHistory = $0 }
+        .popover(isPresented: $showHistory, arrowEdge: .top) {
+            historyPopover
+        }
+    }
+
+    private var historyPopover: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            if editorState.copyHistory.isEmpty {
+                Text("No history")
+                    .font(Theme.ui(12.5))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+            } else {
+                ForEach(Array(editorState.copyHistory.enumerated()), id: \.offset) { _, text in
+                    Button {
+                        showHistory = false
+                        requestApply(text, fromHistory: true)
+                    } label: {
+                        Text(text.isEmpty ? "Empty text" : String(text.prefix(20)))
+                            .font(Theme.ui(12.5))
+                            .lineLimit(1)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(6)
+        .frame(minWidth: 180, maxWidth: 360)
+    }
+
     /// Template chooser shown when the footer Template button is pressed.
     private var templatePopover: some View {
         VStack(alignment: .leading, spacing: 1) {
@@ -213,7 +277,7 @@ struct PromptEditorView: View {
                 ForEach(settingsStore.settings.templates) { template in
                     Button {
                         showTemplates = false
-                        requestApply(template)
+                        requestApply(template.body)
                     } label: {
                         Text(template.name.isEmpty ? "Untitled" : template.name)
                             .font(Theme.ui(12.5))
@@ -406,17 +470,18 @@ struct PromptEditorView: View {
 
     // MARK: - Actions
 
-    private func requestApply(_ template: Template) {
+    private func requestApply(_ text: String, fromHistory: Bool = false) {
         if editorState.text.isEmpty {
-            applyTemplate(template)
+            applyText(text)
         } else {
-            pendingTemplate = template
+            pendingText = text
+            restoringHistory = fromHistory
             showOverwriteConfirm = true
         }
     }
 
-    private func applyTemplate(_ template: Template) {
-        editorState.text = template.body
+    private func applyText(_ text: String) {
+        editorState.text = text
         focusTrigger += 1
     }
 

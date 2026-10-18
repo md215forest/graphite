@@ -5,16 +5,21 @@ final class EditorState: ObservableObject {
         didSet { persistDraft() }
     }
     @Published var toast: String?
+    @Published private(set) var copyHistory: [String]
 
     private var clearToastWorkItem: DispatchWorkItem?
 
     private let persistence: UserDefaults?
     private static let draftKey = "draftText"
+    private static let historyKey = "copyHistory"
+    private static let historyLimit = 10
 
     /// `persistence` is opt-in so unit tests can use a plain, non-persisting state.
     init(persistence: UserDefaults? = nil) {
         self.persistence = persistence
         self.text = persistence?.string(forKey: EditorState.draftKey) ?? ""
+        self.copyHistory = Array((persistence?.stringArray(forKey: EditorState.historyKey) ?? [])
+            .prefix(EditorState.historyLimit))
     }
 
     var characterCount: Int { text.count }
@@ -51,6 +56,9 @@ final class EditorState: ObservableObject {
     ) -> String {
         let output = CopyFormatter.format(text, mode: mode)
         clipboardService.copy(output)
+        copyHistory.insert(text, at: 0)
+        copyHistory = Array(copyHistory.prefix(EditorState.historyLimit))
+        persistence?.set(copyHistory, forKey: EditorState.historyKey)
         return output
     }
 
