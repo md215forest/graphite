@@ -244,25 +244,33 @@ struct PromptEditorView: View {
                     .padding(.vertical, 6)
             } else {
                 ForEach(Array(editorState.copyHistory.enumerated()), id: \.offset) { _, text in
-                    Button {
-                        showHistory = false
-                        requestApply(text, fromHistory: true)
-                    } label: {
-                        Text(text.isEmpty ? "Empty text" : String(text.prefix(20)))
-                            .font(Theme.ui(12.5))
-                            .lineLimit(1)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .contextMenu {
+                    HStack(spacing: 4) {
+                        Button {
+                            showHistory = false
+                            requestApply(text, fromHistory: true)
+                        } label: {
+                            Text(text.isEmpty ? "Empty text" : String(text.prefix(20)))
+                                .font(Theme.ui(12.5))
+                                .lineLimit(1)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.leading, 10)
+                                .padding(.vertical, 6)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+
                         Button(role: .destructive) {
                             editorState.deleteHistoryEntry(text)
                         } label: {
-                            Label("Delete", systemImage: "trash")
+                            Image(systemName: "xmark")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 28, height: 28)
+                                .contentShape(Rectangle())
                         }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Delete history entry")
+                        .help("Delete history entry")
                     }
                 }
             }
